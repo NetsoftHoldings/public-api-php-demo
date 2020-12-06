@@ -1,0 +1,13 @@
+{
+  "name": "netsoftholdings/public-api-demo",
+  "description": "Hubstaff Public API Demo",
+  "type": "project",
+  "require": {
+    "facile-it/php-openid-client": "^0.1.3",
+    "php-http/message": "^1.10",
+    "guzzlehttp/psr7": "^1.7",
+    "php-http/guzzle7-adapter": "^0.1.1",
+    "symfony/cache": "^5.2",
+    "ext-json": "*"
+  }
+}
