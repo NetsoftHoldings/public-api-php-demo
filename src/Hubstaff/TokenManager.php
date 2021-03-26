@@ -14,6 +14,8 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Token\TokenSetFactory;
 use Facile\OpenIDClient\Token\TokenSetInterface;
 use Jose\Component\Core\JWKSet;
+use Jose\Component\Signature\Serializer\CompactSerializer;
+use Jose\Easy\JWT;
 use Jose\Easy\Load;
 
 class TokenManager
@@ -31,6 +33,9 @@ class TokenManager
 
     /** @var TokenSetInterface */
     private $token;
+
+    /** @var int */
+    private $tokenExpires;
 
     function __construct(StateManager $state)
     {
@@ -94,31 +99,37 @@ class TokenManager
     {
         $tokenFactory = new TokenSetFactory();
         $this->token = $tokenFactory->fromArray($this->state->config['token']);
+        $this->tokenExpires = $this->getTokenExp($this->token->getAccessToken());
     }
 
-    private function getTokenExp($token)
+    private function getTokenExp($token) : int
+    {
+        $jwt = (new CompactSerializer())->unserialize($token);
+        $data = json_decode($jwt->getPayload(), true);
+        return $data['exp'];
+    }
+
+    private function validateToken($token) : JWT
     {
         $jwks = $this->issuer->getJwksProvider()->getJwks();
         $jwkset = JWKSet::createFromKeyData($jwks);
-        $jws = Load::jws($token)
-            ->keyset($jwkset)
-            ->run();
-        return $jws->claims->exp();
+        return Load::jws($token)->keyset($jwkset)->run();
     }
 
     function checkToken()
     {
         $expired = empty($this->token->getAccessToken());
         if (!$expired) {
-            $expired = $this->getTokenExp($this->token->getAccessToken()) < (time() + self::ACCESS_TOKEN_EXPIRATION_FUZZ);
+            $expired = $this->tokenExpires < (time() + self::ACCESS_TOKEN_EXPIRATION_FUZZ);
         }
         if ($expired) {
             $authorizationService = (new AuthorizationService());
             $this->token = $authorizationService->refresh($this->client, $this->state->config['token']['refresh_token']);
+            $this->tokenExpires = $this->getTokenExp($this->token->getAccessToken());
             $this->state->config['token'] = array(
                 'access_token' => $this->token->getAccessToken(),
                 'refresh_token' => $this->token->getRefreshToken(),
-                'expires_at' => $this->getTokenExp($this->token->getAccessToken()),
+                'expires_at' => $this->tokenExpires,
             );
             $this->state->save();
         }
@@ -131,7 +142,7 @@ class TokenManager
         return $this->token;
     }
 
-    function APIBaseURL()
+    function APIBaseURL() : string
     {
         return $this->state->config['api_base_url'];
     }

@@ -42,7 +42,7 @@ class APIManager
         $this->httpClient = Psr18ClientDiscovery::find();
     }
 
-    private function makeRequest(RequestInterface $request)
+    private function makeRequest(RequestInterface $request) : array
     {
         $bearer = new Bearer($this->token->token()->getAccessToken());
 
@@ -53,7 +53,7 @@ class APIManager
         return json_decode((string)$response->getBody(), true);
     }
 
-    public function GET($path, $params = [])
+    public function GET($path, $params = []) : array
     {
         $query = http_build_query($params);
 
@@ -65,7 +65,7 @@ class APIManager
         return $this->makeRequest($request);
     }
 
-    public function POST($path, $params = [])
+    public function POST($path, $params = []) : array
     {
         $uri = $this->uriFactory->createUri($this->token->APIBaseURL() . $path);
 
