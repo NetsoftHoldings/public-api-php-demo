@@ -12,6 +12,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 
+
 class APIManager
 {
     /** @var TokenManager */
@@ -50,7 +51,18 @@ class APIManager
 
         $response = $this->httpClient->sendRequest($request);
 
-        return json_decode((string)$response->getBody(), true);
+        $code = $response->getStatusCode();
+        if ($code >= 200 && $code < 300) {
+            return json_decode((string)$response->getBody(), true);
+        } else if ($code >= 300 && $code < 400) {
+            throw new HTTPRedirectException('Redirect response', $response);
+        } else if ($code == 404) {
+            throw new HTTPNotFoundException('Endpoint not found', $response);
+        } else if ($code >= 400) {
+            throw new HTTPBadRequestException('Received Bad request', $response);
+        } else {
+            throw new HTTPBaseException('Received unexpected HTTP response code', $response);
+        }
     }
 
     public function GET($path, $params = [])
