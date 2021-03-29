@@ -11,8 +11,13 @@ $token_manager = new TokenManager($state_manager);
 
 $api = new APIManager($token_manager);
 
-$body = $api->GET('v2/users/me');
-var_dump($body);
+var_dump(
+    $api->GET('v2/users/me')['user']
+);
+
+$api->GET_paged(function($data) {
+    var_dump($data['organizations']);
+}, 'v2/organizations');
 
 /* example to create a project
 $organization_id = '1';
