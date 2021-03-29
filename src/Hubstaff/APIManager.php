@@ -65,6 +65,30 @@ class APIManager
         return $this->makeRequest($request);
     }
 
+    public function GET_paged($callback, $path, $params = [], $page_limit = null, $max_requests = null) : void
+    {
+        $page_start_id = null;
+        $extra_params = [];
+        if (!is_numeric($page_limit)) {
+            $extra_params['page_limit'] = $page_limit;
+        }
+
+        $request_count = 0;
+
+        do {
+            $data = $this->GET($path, array_merge($params, $extra_params));
+            $request_count++;
+            if (is_null($data)) break;
+
+            $callback($data);
+
+            if (!isset($data['pagination'])) break;
+            if (!is_null($max_requests) && $request_count >= $max_requests) break;
+
+            $extra_params['page_start_id'] = $data['pagination']['next_page_start_id'];
+        } while(1);
+    }
+
     public function POST($path, $params = [])
     {
         $uri = $this->uriFactory->createUri($this->token->APIBaseURL() . $path);
