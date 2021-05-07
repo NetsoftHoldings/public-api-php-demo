@@ -99,6 +99,7 @@ class TokenManager
     {
         $tokenFactory = new TokenSetFactory();
         $this->token = $tokenFactory->fromArray($this->state->config['token']);
+        if (empty($this->token->getAccessToken())) return;
         $this->tokenExpires = $this->getTokenExp($this->token->getAccessToken());
     }
 
@@ -123,8 +124,16 @@ class TokenManager
             $expired = $this->tokenExpires < (time() + self::ACCESS_TOKEN_EXPIRATION_FUZZ);
         }
         if ($expired) {
+            $refreshToken = $this->token->getRefreshToken();
+            if (empty($refreshToken)) {
+               throw new \RuntimeException('No refresh token');
+            }
+            $expires_at = $this->getTokenExp($refreshToken);
+            if ($expires_at < time()) {
+               throw new \RuntimeException('Refresh token is expired');
+            }
             $authorizationService = (new AuthorizationService());
-            $this->token = $authorizationService->refresh($this->client, $this->state->config['token']['refresh_token']);
+            $this->token = $authorizationService->refresh($this->client, $refreshToken);
             $this->tokenExpires = $this->getTokenExp($this->token->getAccessToken());
             $this->state->config['token'] = array(
                 'access_token' => $this->token->getAccessToken(),
