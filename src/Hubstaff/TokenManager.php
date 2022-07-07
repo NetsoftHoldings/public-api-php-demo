@@ -10,7 +10,7 @@ use Facile\OpenIDClient\Issuer\IssuerBuilder;
 use Facile\OpenIDClient\Issuer\IssuerInterface;
 use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\JoseVerifier\JWK\JwksProviderBuilder;
-use Facile\OpenIDClient\Service\AuthorizationService;
+use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Token\TokenSetFactory;
 use Facile\OpenIDClient\Token\TokenSetInterface;
 use Jose\Component\Core\JWKSet;
@@ -132,7 +132,7 @@ class TokenManager
             if ($expires_at < time()) {
                throw new \RuntimeException('Refresh token is expired');
             }
-            $authorizationService = (new AuthorizationService());
+            $authorizationService = (new AuthorizationServiceBuilder())->build();
             $this->token = $authorizationService->refresh($this->client, $refreshToken);
             $this->tokenExpires = $this->getTokenExp($this->token->getAccessToken());
             $this->state->config['token'] = array(
