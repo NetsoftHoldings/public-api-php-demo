@@ -121,7 +121,7 @@ class TokenManager
     {
         $expired = empty($this->token->getAccessToken());
         if (!$expired) {
-            $expired = $this->tokenExpires < (time() + self::ACCESS_TOKEN_EXPIRATION_FUZZ);
+            $expired = time() > ($this->tokenExpires - self::ACCESS_TOKEN_EXPIRATION_FUZZ);
         }
         if ($expired) {
             $refreshToken = $this->token->getRefreshToken();
@@ -138,7 +138,6 @@ class TokenManager
             $this->state->config['token'] = array(
                 'access_token' => $this->token->getAccessToken(),
                 'refresh_token' => $this->token->getRefreshToken(),
-                'expires_at' => $this->tokenExpires,
             );
             $this->state->save();
         }
