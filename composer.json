@@ -3,18 +3,23 @@
   "description": "Hubstaff Public API Demo",
   "type": "project",
   "require": {
-    "php": "^7.4",
+    "php": "^8.0",
     "facile-it/php-openid-client": "^0.3.0",
     "php-http/message": "^1.13",
     "guzzlehttp/psr7": "^2.4",
     "http-interop/http-factory-guzzle": "^1.2.0",
     "php-http/guzzle7-adapter": "^1.0.0",
-    "symfony/cache": "^5.2",
+    "symfony/cache": "^6.0",
     "ext-json": "*"
   },
   "autoload": {
     "psr-4": {
       "Hubstaff\\": "src/Hubstaff/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true
     }
   }
 }
